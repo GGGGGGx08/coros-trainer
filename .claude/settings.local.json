@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python test_imports.py)",
-      "Bash(python \"e:/大四/训练/test_imports.py\")"
-    ]
-  }
-}

@@ -1,6 +1,9 @@
 .env
 .training_cache.pkl
 __pycache__/
+.claude/
+training_chart.png
+training_summary.json
 *.pyc
 *.pyo
 *.pyd
