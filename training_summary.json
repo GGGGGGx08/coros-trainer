@@ -1,0 +1,36 @@
+{
+  "report_date": "2026-05-11 12:21",
+  "total_activities": 45,
+  "sport_breakdown": {
+    "跑步": {
+      "distance": 199.57,
+      "duration": 59826.03,
+      "count": 29,
+      "avg_hr": 141.79
+    },
+    "户外跑步": {
+      "distance": 7.91,
+      "duration": 2417.42,
+      "count": 1,
+      "avg_hr": 146.0
+    },
+    "田径场跑步": {
+      "distance": 22.44,
+      "duration": 10649.68,
+      "count": 1,
+      "avg_hr": 135.0
+    },
+    "室内跑步": {
+      "distance": 61.76,
+      "duration": 15539.11,
+      "count": 10,
+      "avg_hr": 169.8
+    },
+    "公路骑行": {
+      "distance": 53.51,
+      "duration": 16832.57,
+      "count": 4,
+      "avg_hr": 91.75
+    }
+  }
+}

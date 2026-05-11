@@ -1,0 +1,9 @@
+requests
+pandas
+matplotlib
+python-dotenv
+fitdecode
+streamlit
+plotly
+anthropic
+numpy
