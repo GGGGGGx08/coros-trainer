@@ -234,8 +234,10 @@ def build_summary(df) -> str:
     return "\n".join(lines)
 
 
+DEFAULT_API_KEY = 'sk-fb91554212d545d2828ab069a16ce475'
+
 def call_claude(sys_prompt: str, msg: str, max_tok=2000) -> str | None:
-    key = os.getenv('ANTHROPIC_API_KEY') or st.session_state.get('api_key', '')
+    key = st.session_state.get('api_key', '') or os.getenv('ANTHROPIC_API_KEY') or DEFAULT_API_KEY
     if not key:
         return None
     try:
@@ -431,9 +433,10 @@ with st.sidebar:
     # === AI Key ===
     st.markdown("**🤖 AI Key**")
     if st.session_state.api_key:
-        st.success("已配置 ✅")
+        st.success("已使用自定义Key ✅")
     else:
-        with st.expander("配置 Key", expanded=False):
+        st.success("已启用默认共享Key ✅")
+        with st.expander("使用自备Key", expanded=False):
             k = st.text_input("Anthropic API Key", type="password", placeholder="sk-ant-...")
             if k and st.button("保存", use_container_width=True):
                 st.session_state.api_key = k
@@ -677,43 +680,40 @@ with t2:
 with t3:
     st.subheader("🤖 AI 智能教练")
 
-    if not st.session_state.api_key:
-        st.warning("请在侧边栏配置 Anthropic API Key")
-    else:
-        qc1, qc2, qc3, qc4 = st.columns(4)
-        user_msg = None
-        with qc1:
-            if st.button("📊 综合分析", use_container_width=True): user_msg = "请全面分析我的训练数据"
-        with qc2:
-            if st.button("🫀 负荷评估", use_container_width=True): user_msg = "评估训练负荷与过度训练风险"
-        with qc3:
-            if st.button("📈 趋势分析", use_container_width=True): user_msg = "分析训练趋势和进步情况"
-        with qc4:
-            if st.button("🎯 目标建议", use_container_width=True): user_msg = "根据我的数据给出近期合理目标"
+    qc1, qc2, qc3, qc4 = st.columns(4)
+    user_msg = None
+    with qc1:
+        if st.button("📊 综合分析", use_container_width=True): user_msg = "请全面分析我的训练数据"
+    with qc2:
+        if st.button("🫀 负荷评估", use_container_width=True): user_msg = "评估训练负荷与过度训练风险"
+    with qc3:
+        if st.button("📈 趋势分析", use_container_width=True): user_msg = "分析训练趋势和进步情况"
+    with qc4:
+        if st.button("🎯 目标建议", use_container_width=True): user_msg = "根据我的数据给出近期合理目标"
 
-        for msg in st.session_state.chat:
-            with st.chat_message("🧑" if msg['role'] == 'user' else "🤖"):
-                st.markdown(msg['content'])
-        if not st.session_state.chat:
-            st.info("选择快捷分析或输入问题，AI教练将基于丹尼尔斯训练法为你解答。")
+    for msg in st.session_state.chat:
+        with st.chat_message("🧑" if msg['role'] == 'user' else "🤖"):
+            st.markdown(msg['content'])
+    if not st.session_state.chat:
+        st.info("选择快捷分析或输入问题，AI教练将基于丹尼尔斯训练法为你解答。")
 
-        user_input = st.chat_input("输入你的问题...")
-        if user_msg: user_input = user_msg
+    user_input = st.chat_input("输入你的问题...")
+    if user_msg: user_input = user_msg
 
-        if user_input:
-            st.session_state.chat.append({'role': 'user', 'content': user_input})
-            pctx = "\n".join([f"{k}: {v}" for k, v in profile.items() if v])
-            tctx = build_summary(df)
-            wctx = ""
-            if st.session_state.weather:
-                c = st.session_state.weather.get('current', {})
-                wctx = f"\n天气: {weather_desc(c.get('weather_code',0))} {c.get('temperature_2m','?')}°C"
+    if user_input:
+        st.session_state.chat.append({'role': 'user', 'content': user_input})
+        pctx = "\n".join([f"{k}: {v}" for k, v in profile.items() if v])
+        tctx = build_summary(df)
+        wctx = ""
+        if st.session_state.weather:
+            c = st.session_state.weather.get('current', {})
+            wctx = f"\n天气: {weather_desc(c.get('weather_code',0))} {c.get('temperature_2m','?')}°C"
 
-            vref = ""
-            if paces:
-                vref = f"\n【丹尼尔斯配速 (基于COROS实测LTSP)】阈值:{paces['ltsp_str']}/km | E:{paces['E_range']}/km | T:{paces['T_range']}/km | I:{paces['I_range']}/km | R400:{paces['R_400']}s"
+        vref = ""
+        if paces:
+            vref = f"\n【丹尼尔斯配速 (基于COROS实测LTSP)】阈值:{paces['ltsp_str']}/km | E:{paces['E_range']}/km | T:{paces['T_range']}/km | I:{paces['I_range']}/km | R400:{paces['R_400']}s"
 
-            prompt = f"""你是精通杰克·丹尼尔斯训练法的跑步教练。
+        prompt = f"""你是精通杰克·丹尼尔斯训练法的跑步教练。
 
 【个人档案】
 {pctx}
@@ -725,33 +725,30 @@ with t3:
 
 请基于丹尼尔斯训练法原则（基于COROS实测LTSP的配速体系、周期化阶段、80/20强度分布）给出专业、数据驱动的建议。引用具体数据。用中文。"""
 
-            with st.spinner("AI思考中..."):
-                resp = call_claude(
-                    "你是精通丹尼尔斯经典跑步训练法的专业教练。配速数据来自COROS实测乳酸阈值。用中文回答，具体可操作。",
-                    prompt)
-            st.session_state.chat.append({'role': 'assistant', 'content': resp or "AI不可用"})
-            st.rerun()
+        with st.spinner("AI思考中..."):
+            resp = call_claude(
+                "你是精通丹尼尔斯经典跑步训练法的专业教练。配速数据来自COROS实测乳酸阈值。用中文回答，具体可操作。",
+                prompt)
+        st.session_state.chat.append({'role': 'assistant', 'content': resp or "AI不可用"})
+        st.rerun()
 
-        if st.session_state.chat and st.button("🗑 清空", use_container_width=True):
-            st.session_state.chat = []
-            st.rerun()
+    if st.session_state.chat and st.button("🗑 清空", use_container_width=True):
+        st.session_state.chat = []
+        st.rerun()
 
 # === Tab 4: 训练计划 ===
 with t4:
     st.subheader("📅 AI 定制训练计划")
 
-    if not st.session_state.api_key:
-        st.warning("请配置 Anthropic API Key")
-    else:
-        if paces:
-            st.markdown(f"**阈值配速: {paces['ltsp_str']}/km** (COROS实测) | E: {paces['E_range']}/km | T: {paces['T_range']}/km | I: {paces['I_range']}/km")
+    if paces:
+        st.markdown(f"**阈值配速: {paces['ltsp_str']}/km** (COROS实测) | E: {paces['E_range']}/km | T: {paces['T_range']}/km | I: {paces['I_range']}/km")
 
-        pc1, pc2 = st.columns(2)
-        with pc1:
-            weeks = st.selectbox("周期", ["1周", "2周", "4周"], 0)
-            focus = st.selectbox("重点", ["综合提升", "提升速度(I/R)", "提升耐力(T阈值)", "减肥减脂(E为主)", "恢复调整", "赛前减量"], 0)
-        with pc2:
-            spw = st.slider("每周训练次数", 2, 7, 4)
+    pc1, pc2 = st.columns(2)
+    with pc1:
+        weeks = st.selectbox("周期", ["1周", "2周", "4周"], 0)
+        focus = st.selectbox("重点", ["综合提升", "提升速度(I/R)", "提升耐力(T阈值)", "减肥减脂(E为主)", "恢复调整", "赛前减量"], 0)
+    with pc2:
+        spw = st.slider("每周训练次数", 2, 7, 4)
 
         if st.button("🎯 生成专属计划", use_container_width=True, type="primary"):
             weekly_km = td / (max((df['date'].max() - df['date'].min()).days, 1) / 7) if 'date' in df.columns else 30
