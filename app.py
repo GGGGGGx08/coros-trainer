@@ -234,7 +234,7 @@ def build_summary(df) -> str:
     return "\n".join(lines)
 
 
-DEFAULT_API_KEY = 'sk-47c65f95d797432ea448617894c715da'
+DEFAULT_API_KEY = 'sk-d528393dd5a94f5cb3f977bc09c16be1'
 
 def call_claude(sys_prompt: str, msg: str, max_tok=2000) -> str | None:
     key = st.session_state.get('api_key', '') or os.getenv('ANTHROPIC_API_KEY') or DEFAULT_API_KEY
